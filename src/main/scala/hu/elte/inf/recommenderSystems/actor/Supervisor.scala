@@ -1,16 +1,15 @@
 package hu.elte.inf.recommenderSystems.actor
 
 import akka.actor.SupervisorStrategy.Stop
-import akka.pattern.ask
 import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props}
 import hu.elte.inf.recommenderSystems.actor.QueueListener.{CloseYourEars, Listen}
 import hu.elte.inf.recommenderSystems.actor.Supervisor.{Begin, End, SendMessage}
-import hu.elte.inf.recommenderSystems.model.MyObject
+import play.api.libs.json.JsValue
 
 object Supervisor {
   case object Begin
   case object End
-  case class SendMessage(myObject: MyObject)
+  case class SendMessage(queueName: String, message: JsValue)
   def props: Props = Props[Supervisor]
 }
 
