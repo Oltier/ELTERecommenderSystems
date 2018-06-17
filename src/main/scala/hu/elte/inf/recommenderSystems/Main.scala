@@ -1,9 +1,10 @@
 package hu.elte.inf.recommenderSystems
 
 import akka.actor.ActorSystem
+import hu.elte.inf.recommenderSystems.actor.MessageSender.SendMessage
 import spray.json._
 import hu.elte.inf.recommenderSystems.actor.Supervisor
-import hu.elte.inf.recommenderSystems.actor.Supervisor.{Begin, End, SendMessage}
+import hu.elte.inf.recommenderSystems.actor.Supervisor.{Begin, End}
 import hu.elte.inf.recommenderSystems.config.Config
 import hu.elte.inf.recommenderSystems.model.enum.Method
 import hu.elte.inf.recommenderSystems.model.registration.{RegistrationJsonSupport, RegistrationMessage, RegistrationTask}
