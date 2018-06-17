@@ -4,19 +4,19 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.spingo.op_rabbit.Directives._
 import com.spingo.op_rabbit._
 import com.spingo.op_rabbit.SprayJsonSupport._
-import hu.elte.inf.recommenderSystems.model.registration.{RegistrationJsonSupport, RegistrationMessage}
+import hu.elte.inf.recommenderSystems.model.entityrelation.{EntityRelationJsonSupport, EntityRelationMessage}
 
 import scala.concurrent.ExecutionContextExecutor
 
-object RegistrationQueueListener {
-  def props(rabbitControl: ActorRef): Props = Props(new RegistrationQueueListener(rabbitControl))
+object NodeAndRelationQueueListener {
+  def props(rabbitControl: ActorRef): Props = Props(new NodeAndRelationQueueListener(rabbitControl))
 
-  val name: String = "RegistrationQueueListener"
-  val QUEUE: String = "ReCoEngineRegistry"
+  val name: String = "NodeAndRelationQueueListener"
+  val QUEUE: String = "KB_ML1M"
 }
 
-class RegistrationQueueListener(rabbitControl: ActorRef) extends Actor with ActorLogging with RegistrationJsonSupport with LimitedDeliveryStrategy {
-  import RegistrationQueueListener.QUEUE
+class NodeAndRelationQueueListener(rabbitControl: ActorRef) extends Actor with ActorLogging with EntityRelationJsonSupport with LimitedDeliveryStrategy {
+  import NodeAndRelationQueueListener.QUEUE
 
   implicit val ec: ExecutionContextExecutor = context.system.dispatcher
 
@@ -28,7 +28,7 @@ class RegistrationQueueListener(rabbitControl: ActorRef) extends Actor with Acto
         Subscription.run(rabbitControl) {
           channel(qos = 3) {
             consume(Queue.passive(topic(queue(QUEUE), List(s"$QUEUE.#")))) {
-              (body(as[RegistrationMessage]) & routingKey) {
+              (body(as[EntityRelationMessage]) & routingKey) {
                 (obj, key) =>
                   log.debug(s"received my object $obj with key $key")
                   ack

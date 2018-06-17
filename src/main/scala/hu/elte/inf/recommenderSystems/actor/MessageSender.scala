@@ -12,31 +12,26 @@ object MessageSender {
 
   case class SendMessage(queueName: String, message: JsValue)
 
-  def props: Props = Props(new MessageSender)
+  def props(rabbitControl: ActorRef): Props = Props(new MessageSender(rabbitControl))
 
   val name: String = "MessageSender"
 }
 
-class MessageSender
+class MessageSender(rabbitControl: ActorRef)
     extends Actor
     with ActorLogging
     with DefaultJsonProtocol
-    with DefaultJsonFormats {
+    with DefaultJsonFormats
+    with LimitedDeliveryStrategy {
 
   import com.spingo.op_rabbit.SprayJsonSupport._
 
-  implicit val recoveryStrategy: AnyRef with RecoveryStrategy {
-    def genRetryBinding(queueName: String): Binding
-  } = RecoveryStrategy.limitedRedeliver()
-
   implicit val ec: ExecutionContextExecutor = context.system.dispatcher
-
-  val RABBIT_CONTROL: ActorRef = context.actorOf(Props[RabbitControl])
 
   var myQueueSubscription: Option[SubscriptionRef] = None
 
   override def receive: Receive = {
     case msg: SendMessage =>
-      RABBIT_CONTROL ! Message.topic(msg.message, msg.queueName)
+      rabbitControl ! Message.topic(msg.message, msg.queueName)
   }
 }

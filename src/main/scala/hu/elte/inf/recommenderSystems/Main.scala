@@ -3,7 +3,7 @@ package hu.elte.inf.recommenderSystems
 import akka.actor.ActorSystem
 import hu.elte.inf.recommenderSystems.actor.MessageSender.SendMessage
 import spray.json._
-import hu.elte.inf.recommenderSystems.actor.Supervisor
+import hu.elte.inf.recommenderSystems.actor.{NodeAndRelationQueueListener, Supervisor}
 import hu.elte.inf.recommenderSystems.actor.Supervisor.{Begin, End}
 import hu.elte.inf.recommenderSystems.config.Config
 import hu.elte.inf.recommenderSystems.model.enum.Method
@@ -20,7 +20,8 @@ object Main extends App with RegistrationJsonSupport {
 
     val registrationMessage = RegistrationMessage(Method.REGISTER, RegistrationTask("tudlik_zoltan_ce0ta3", Config.DEVELOPER))
 
-    supervisor ! SendMessage(Config.QUEUE.name, registrationMessage.toJson)
+//    supervisor ! SendMessage(Config.QUEUE.name, registrationMessage.toJson)
+    supervisor ! SendMessage(NodeAndRelationQueueListener.QUEUE, """{"hello": "szia"""".toJson)
 
   }
 

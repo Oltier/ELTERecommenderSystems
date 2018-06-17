@@ -4,4 +4,5 @@ object Method extends CustomEnumeration with SerializableEnumeration {
   type Method = Value
   val REGISTER: Value = Value("register")
   val ADD_NODE_TYPE: Value = Value("addNodeType")
+  val ADD_RELATION_TYPE: Value = Value("addRelationType")
 }
