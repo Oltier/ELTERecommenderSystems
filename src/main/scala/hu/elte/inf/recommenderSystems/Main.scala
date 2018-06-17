@@ -3,13 +3,14 @@ package hu.elte.inf.recommenderSystems
 import akka.actor.ActorSystem
 import hu.elte.inf.recommenderSystems.actor.MessageSender.SendMessage
 import spray.json._
-import hu.elte.inf.recommenderSystems.actor.{NodeAndRelationQueueListener, Supervisor}
+import hu.elte.inf.recommenderSystems.actor.{NodeAndRelationQueueListener, RegistrationQueueListener, Supervisor}
 import hu.elte.inf.recommenderSystems.actor.Supervisor.{Begin, End}
 import hu.elte.inf.recommenderSystems.config.Config
+import hu.elte.inf.recommenderSystems.model.entityrelation.{AddNodeType, AddNodeTypeMethod, EntityRelationJsonSupport}
 import hu.elte.inf.recommenderSystems.model.enum.Method
 import hu.elte.inf.recommenderSystems.model.registration.{RegistrationJsonSupport, RegistrationMessage, RegistrationTask}
 
-object Main extends App with RegistrationJsonSupport {
+object Main extends App with RegistrationJsonSupport with EntityRelationJsonSupport {
 
   val system: ActorSystem = ActorSystem("rabbitMq")
 
@@ -19,9 +20,10 @@ object Main extends App with RegistrationJsonSupport {
   if (Config.SETUP.enableSendRegisterMessage) {
 
     val registrationMessage = RegistrationMessage(Method.REGISTER, RegistrationTask("tudlik_zoltan_ce0ta3", Config.DEVELOPER))
+    val addNodeTypeMessage = AddNodeTypeMethod(Method.ADD_NODE_TYPE, AddNodeType("Person"))
 
-//    supervisor ! SendMessage(Config.QUEUE.name, registrationMessage.toJson)
-    supervisor ! SendMessage(NodeAndRelationQueueListener.QUEUE, """{"hello": "szia"""".toJson)
+    supervisor ! SendMessage(RegistrationQueueListener.QUEUE, registrationMessage.toJson)
+    supervisor ! SendMessage(NodeAndRelationQueueListener.QUEUE, addNodeTypeMessage.toJson)
 
   }
 

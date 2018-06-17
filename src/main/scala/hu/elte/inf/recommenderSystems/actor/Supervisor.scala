@@ -15,7 +15,7 @@ object Supervisor {
 
 class Supervisor extends Actor with ActorLogging {
   val rabbitControl: ActorRef = context.actorOf(Props[RabbitControl])
-//  val registrationQueueListener: ActorRef = context.actorOf(RegistrationQueueListener.props(rabbitControl), RegistrationQueueListener.name)
+  val registrationQueueListener: ActorRef = context.actorOf(RegistrationQueueListener.props(rabbitControl), RegistrationQueueListener.name)
   val nodeAndRelationQueueListener: ActorRef = context.actorOf(NodeAndRelationQueueListener.props(rabbitControl), NodeAndRelationQueueListener.name)
   val messageSender: ActorRef = context.actorOf(MessageSender.props(rabbitControl), MessageSender.name)
 
@@ -28,13 +28,13 @@ class Supervisor extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case Begin =>
-//      registrationQueueListener ! Listen
+      registrationQueueListener ! Listen
       nodeAndRelationQueueListener ! Listen
 
     case msg: SendMessage => messageSender forward msg
 
     case End =>
-//      registrationQueueListener ! CloseYourEars
+      registrationQueueListener ! CloseYourEars
       nodeAndRelationQueueListener ! CloseYourEars
   }
 }
