@@ -2,7 +2,8 @@ package hu.elte.inf.recommenderSystems.actor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.spingo.op_rabbit._
-import hu.elte.inf.recommenderSystems.actor.MessageSender.SendMessage
+import com.spingo.op_rabbit.properties.{CorrelationId, ReplyTo}
+import hu.elte.inf.recommenderSystems.actor.MessageSender.{SendJsonMessage, SendMessageWithCorrelationId, SendMessageWithCorrelationIdAndReplyToHelloWorld, SendMessageWithCorrelationIdHelloWord}
 import org.json4s.DefaultJsonFormats
 import spray.json.{DefaultJsonProtocol, JsValue}
 
@@ -10,7 +11,15 @@ import scala.concurrent.ExecutionContextExecutor
 
 object MessageSender {
 
-  case class SendMessage(queueName: String, message: JsValue)
+  sealed trait SendMessage
+
+  case class SendJsonMessage(queueName: String, message: JsValue) extends SendMessage
+
+  case class SendMessageWithCorrelationId(queueName: String, message: JsValue, correlationId: String) extends SendMessage
+
+  case class SendMessageWithCorrelationIdHelloWord(queueName: String, message: String, correlationId: String) extends SendMessage
+
+  case class SendMessageWithCorrelationIdAndReplyToHelloWorld(queueName: String, message: String, correlationId: String, replyTo: String) extends SendMessage
 
   def props(rabbitControl: ActorRef): Props = Props(new MessageSender(rabbitControl))
 
@@ -22,7 +31,7 @@ class MessageSender(rabbitControl: ActorRef)
     with ActorLogging
     with DefaultJsonProtocol
     with DefaultJsonFormats
-    with LimitedDeliveryStrategy {
+    with LimitedRedeliveryStrategy {
 
   import com.spingo.op_rabbit.SprayJsonSupport._
 
@@ -31,7 +40,16 @@ class MessageSender(rabbitControl: ActorRef)
   var myQueueSubscription: Option[SubscriptionRef] = None
 
   override def receive: Receive = {
-    case msg: SendMessage =>
+    case msg: SendJsonMessage =>
       rabbitControl ! Message.topic(msg.message, msg.queueName)
+
+    case msg: SendMessageWithCorrelationId =>
+      rabbitControl ! Message.topic(msg.message, msg.queueName, properties = Seq(CorrelationId(msg.correlationId)))
+
+    case msg: SendMessageWithCorrelationIdHelloWord =>
+      rabbitControl ! Message.topic(msg.message, msg.queueName, properties = Seq(CorrelationId(msg.correlationId)))
+
+    case msg: SendMessageWithCorrelationIdAndReplyToHelloWorld =>
+      rabbitControl ! Message.topic(msg.message, msg.queueName, properties = Seq(CorrelationId(msg.correlationId), ReplyTo(msg.replyTo)))
   }
 }

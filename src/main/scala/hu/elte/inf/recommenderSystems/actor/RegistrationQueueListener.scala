@@ -15,7 +15,7 @@ object RegistrationQueueListener {
   val QUEUE: String = "ReCoEngineRegistry"
 }
 
-class RegistrationQueueListener(rabbitControl: ActorRef) extends Actor with ActorLogging with RegistrationJsonSupport with LimitedDeliveryStrategy {
+class RegistrationQueueListener(rabbitControl: ActorRef) extends Actor with ActorLogging with RegistrationJsonSupport with LimitedRedeliveryStrategy {
   import RegistrationQueueListener.QUEUE
 
   implicit val ec: ExecutionContextExecutor = context.system.dispatcher
@@ -28,9 +28,9 @@ class RegistrationQueueListener(rabbitControl: ActorRef) extends Actor with Acto
         Subscription.run(rabbitControl) {
           channel(qos = 3) {
             consume(Queue.passive(topic(queue(QUEUE), List(s"$QUEUE.#")))) {
-              (body(as[RegistrationMessage]) & routingKey) {
-                (obj, key) =>
-                  log.debug(s"received my object $obj with key $key")
+              body(as[RegistrationMessage]) {
+                obj =>
+                  log.debug(s"received my object $obj")
                   ack
               }
             }
