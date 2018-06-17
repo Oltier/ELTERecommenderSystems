@@ -4,8 +4,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.spingo.op_rabbit.Directives._
 import com.spingo.op_rabbit._
 import com.spingo.op_rabbit.SprayJsonSupport._
+import hu.elte.inf.recommenderSystems.actor.MessageSender.SendMessage
 import hu.elte.inf.recommenderSystems.actor.RegistrationQueueListener.{CloseYourEars, Listen}
-import hu.elte.inf.recommenderSystems.actor.Supervisor.SendMessage
 import hu.elte.inf.recommenderSystems.model.registration.{RegistrationJsonSupport, RegistrationMessage}
 
 import scala.concurrent.ExecutionContextExecutor
@@ -17,6 +17,8 @@ object RegistrationQueueListener {
   case object CloseYourEars
 
   def props: Props = Props(new RegistrationQueueListener)
+
+  val name: String = "RegistrationQueueListener"
 }
 
 class RegistrationQueueListener extends Actor with ActorLogging with RegistrationJsonSupport {
@@ -47,11 +49,6 @@ class RegistrationQueueListener extends Actor with ActorLogging with Registratio
           }
         }
       )
-
-    case msg: SendMessage =>
-      myQueueSubscription.get.initialized.foreach{ _ =>
-        RABBIT_CONTROL ! Message.topic(msg.message, msg.queueName)
-      }
 
     case CloseYourEars =>
       myQueueSubscription.foreach(_.close())
