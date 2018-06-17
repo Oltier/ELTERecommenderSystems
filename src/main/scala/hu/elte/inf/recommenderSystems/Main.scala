@@ -1,13 +1,14 @@
 package hu.elte.inf.recommenderSystems
 
 import akka.actor.ActorSystem
+import spray.json._
 import hu.elte.inf.recommenderSystems.actor.Supervisor
 import hu.elte.inf.recommenderSystems.actor.Supervisor.{Begin, End, SendMessage}
 import hu.elte.inf.recommenderSystems.config.Config
-import hu.elte.inf.recommenderSystems.model.{Method, RegistrationMessage, Task}
-import play.api.libs.json.Json
+import hu.elte.inf.recommenderSystems.model.enum.Method
+import hu.elte.inf.recommenderSystems.model.registration.{RegistrationJsonSupport, RegistrationMessage, RegistrationTask}
 
-object Main extends App {
+object Main extends App with RegistrationJsonSupport {
 
   val system: ActorSystem = ActorSystem("rabbitMq")
 
@@ -16,9 +17,9 @@ object Main extends App {
 
   if (Config.SETUP.enableSendRegisterMessage) {
 
-    val registrationMessage = RegistrationMessage(Method.REGISTER, Task("tudlik_zoltan_ce0ta3", Config.DEVELOPER))
+    val registrationMessage = RegistrationMessage(Method.REGISTER, RegistrationTask("tudlik_zoltan_ce0ta3", Config.DEVELOPER))
 
-    supervisor ! SendMessage(Config.QUEUE.name, Json.toJson(registrationMessage))
+    supervisor ! SendMessage(Config.QUEUE.name, registrationMessage.toJson)
 
   }
 

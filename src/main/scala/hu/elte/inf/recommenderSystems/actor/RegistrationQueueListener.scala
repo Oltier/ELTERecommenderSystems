@@ -2,28 +2,30 @@ package hu.elte.inf.recommenderSystems.actor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.spingo.op_rabbit.Directives._
-import com.spingo.op_rabbit.PlayJsonSupport._
 import com.spingo.op_rabbit._
-import hu.elte.inf.recommenderSystems.actor.QueueListener.{CloseYourEars, Listen}
+import com.spingo.op_rabbit.SprayJsonSupport._
+import hu.elte.inf.recommenderSystems.actor.RegistrationQueueListener.{CloseYourEars, Listen}
 import hu.elte.inf.recommenderSystems.actor.Supervisor.SendMessage
-import hu.elte.inf.recommenderSystems.config.Config
-import hu.elte.inf.recommenderSystems.model.RegistrationMessage
+import hu.elte.inf.recommenderSystems.model.registration.{RegistrationJsonSupport, RegistrationMessage}
 
 import scala.concurrent.ExecutionContextExecutor
-import play.api.libs.json._
 
-object QueueListener {
+object RegistrationQueueListener {
 
   case object Listen
 
   case object CloseYourEars
 
-  def props: Props = Props(new QueueListener)
+  def props: Props = Props(new RegistrationQueueListener)
 }
 
-class QueueListener extends Actor with ActorLogging {
-  val QUEUE: String = Config.QUEUE.name
-  implicit val recoveryStrategy = RecoveryStrategy.limitedRedeliver()
+class RegistrationQueueListener extends Actor with ActorLogging with RegistrationJsonSupport {
+  val QUEUE: String = "ReCoEngineRegistry"
+
+  implicit val recoveryStrategy: AnyRef with RecoveryStrategy {
+    def genRetryBinding(queueName: String): Binding
+  } = RecoveryStrategy.limitedRedeliver()
+
   implicit val ec: ExecutionContextExecutor = context.system.dispatcher
 
   val RABBIT_CONTROL: ActorRef = context.actorOf(Props[RabbitControl])
@@ -35,8 +37,8 @@ class QueueListener extends Actor with ActorLogging {
       myQueueSubscription = Some(
         Subscription.run(RABBIT_CONTROL) {
           channel(qos = 3) {
-            consume(topic(queue(QUEUE), List(s"${Config.QUEUE.name}.#"))) {
-              (body(as[JsValue]) & routingKey) {
+            consume(topic(queue(QUEUE), List(s"$QUEUE.#"))) {
+              (body(as[RegistrationMessage]) & routingKey) {
                 (obj, key) =>
                   log.debug(s"received my object $obj with key $key")
                   ack
