@@ -16,7 +16,11 @@ trait EntityRelationJsonSupport extends DefaultJsonProtocol with SprayJsonSuppor
   implicit val deleteNodeTypeMethodJsonFormat: RootJsonFormat[DeleteNodeTypeMethod] = jsonFormat2(DeleteNodeTypeMethod)
   implicit val deleteRelationTypeJsonFormat: RootJsonFormat[DeleteRelationType] = jsonFormat1(DeleteRelationType)
   implicit val deleteRelationTypeMethodJsonFormat: RootJsonFormat[DeleteRelationTypeMethod] = jsonFormat2(DeleteRelationTypeMethod)
-  
+  implicit val addNodeJsonFormat: RootJsonFormat[AddNode] = jsonFormat4(AddNode)
+  implicit val addNodeMethodJsonFormat: RootJsonFormat[AddNodeMethod] = jsonFormat2(AddNodeMethod)
+  implicit val addRelationJsonFormat: RootJsonFormat[AddRelation] = jsonFormat6(AddRelation)
+  implicit val addRelationMethodJsonFormat: RootJsonFormat[AddRelationMethod] = jsonFormat2(AddRelationMethod)
+
   
   implicit object EntityRelationMessageFormat extends RootJsonFormat[EntityRelationMessage] {
     override def read(json: JsValue): EntityRelationMessage = json match {
@@ -28,6 +32,10 @@ trait EntityRelationJsonSupport extends DefaultJsonProtocol with SprayJsonSuppor
         json.convertTo[DeleteNodeTypeMethod]
       case JsObject(fields) if fields.keys.exists(_ == "method") && fields("method").convertTo[Method] == Method.DELETE_RELATION_TYPE =>
         json.convertTo[DeleteRelationTypeMethod]
+      case JsObject(fields) if fields.keys.exists(_ == "method") && fields("method").convertTo[Method] == Method.ADD_NODE =>
+        json.convertTo[AddNodeMethod]
+      case JsObject(fields) if fields.keys.exists(_ == "method") && fields("method").convertTo[Method] == Method.ADD_RELATION =>
+        json.convertTo[AddRelation]
       case other => throw DeserializationException(s"Entity relation message expected, but we got $other")
     }
 
@@ -49,6 +57,16 @@ trait EntityRelationJsonSupport extends DefaultJsonProtocol with SprayJsonSuppor
         )
 
         case o: DeleteRelationTypeMethod => JsObject(
+          "title" -> o.method.toJson,
+          "task" -> o.task.toJson
+        )
+
+        case o: AddNodeMethod => JsObject(
+          "title" -> o.method.toJson,
+          "task" -> o.task.toJson
+        )
+
+        case o: AddRelationMethod => JsObject(
           "title" -> o.method.toJson,
           "task" -> o.task.toJson
         )

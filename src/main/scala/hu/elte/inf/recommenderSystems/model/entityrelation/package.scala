@@ -20,4 +20,12 @@ package object entityrelation {
   case class DeleteRelationType(title: String) extends EntityRelationMessage
 
   case class DeleteRelationTypeMethod(method: Method, task: DeleteRelationType) extends EntityRelationMessage
+
+  case class AddNode(externalId: Long, `type`: String, title: String, recommendable: Boolean) extends EntityRelationMessage
+
+  case class AddNodeMethod(method: Method, task: AddNode) extends EntityRelationMessage
+
+  case class AddRelation(exterNalId: String, `type`: String, title: String, fromExternalId: Long, toExternalId: Long, rating: Double) extends EntityRelationMessage
+
+  case class AddRelationMethod(method: Method, task: AddRelation) extends EntityRelationMessage
 }
