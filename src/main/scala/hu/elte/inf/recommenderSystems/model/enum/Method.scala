@@ -9,4 +9,5 @@ object Method extends CustomEnumeration with SerializableEnumeration {
   val DELETE_RELATION_TYPE: Value = Value("deleteRelationType")
   val ADD_NODE: Value = Value("addNode")
   val ADD_RELATION: Value = Value("addRelation")
+  val EMIT: Value = Value("emit")
 }

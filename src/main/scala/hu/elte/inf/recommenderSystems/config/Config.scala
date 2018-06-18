@@ -8,7 +8,7 @@ object Config {
 
   import pureconfig._
 
-  final case class Queue(name: String)
+  final case class Queue(knowledgeBaseQueueName: String, trueRatingQueueName: String)
   final case class Developer(developerEmail: String, developerName: String, developerNeptun: String)
   final case class Setup(enableSendRegisterMessage: Boolean)
 
