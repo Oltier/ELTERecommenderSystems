@@ -4,9 +4,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.spingo.op_rabbit.Directives._
 import com.spingo.op_rabbit._
 import com.spingo.op_rabbit.properties.{CorrelationId, ReplyTo}
-import spray.json._
-import hu.elte.inf.recommenderSystems.actor.MessageSender.{SendJsonMessage, SendMessageWithCorrelationId, SendMessageWithCorrelationIdHelloWord}
-import hu.elte.inf.recommenderSystems.model.entityrelation.EntityRelationMessage
+import hu.elte.inf.recommenderSystems.actor.MessageSender.SendMessageWithCorrelationIdHelloWord
 
 import scala.concurrent.ExecutionContextExecutor
 

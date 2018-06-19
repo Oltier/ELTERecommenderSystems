@@ -2,8 +2,8 @@ package hu.elte.inf.recommenderSystems.actor
 
 import akka.actor.SupervisorStrategy.Stop
 import akka.actor.{Actor, ActorLogging, ActorRef, OneForOneStrategy, Props}
-import com.spingo.op_rabbit.{Binding, RabbitControl, RecoveryStrategy}
-import hu.elte.inf.recommenderSystems.actor.MessageSender.{SendJsonMessage, SendMessage}
+import com.spingo.op_rabbit.RabbitControl
+import hu.elte.inf.recommenderSystems.actor.MessageSender.SendMessage
 import hu.elte.inf.recommenderSystems.actor.Supervisor.{Begin, End}
 
 object Supervisor {
@@ -19,7 +19,7 @@ class Supervisor extends Actor with ActorLogging {
   val nodeAndRelationQueueListener: ActorRef = context.actorOf(NodeAndRelationQueueListener.props(rabbitControl), NodeAndRelationQueueListener.name)
   val messageSender: ActorRef = context.actorOf(MessageSender.props(rabbitControl), MessageSender.name)
   val helloWorldListener: ActorRef = context.actorOf(HelloWorldListener.props(rabbitControl, messageSender), HelloWorldListener.name)
-  val myChannelListener: ActorRef = context.actorOf(MyChannelListener.props(rabbitControl))
+  val myChannelListener: ActorRef = context.actorOf(MyChannelListener.props(rabbitControl, messageSender), MyChannelListener.name)
 
   override val supervisorStrategy: OneForOneStrategy = OneForOneStrategy(loggingEnabled = true) {
     case ex: Exception =>

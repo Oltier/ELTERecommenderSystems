@@ -10,7 +10,7 @@ object Config {
 
   final case class Queue(knowledgeBaseQueueName: String, trueRatingQueueName: String, myChannel: String)
   final case class Developer(developerEmail: String, developerName: String, developerNeptun: String)
-  final case class Setup(enableSendRegisterMessage: Boolean)
+  final case class Setup(commandLineMode: Boolean)
 
   lazy val QUEUE: Queue = loadConfigOrThrow[Queue]("queue")
   lazy val DEVELOPER: Developer = loadConfigOrThrow[Developer]("developer")

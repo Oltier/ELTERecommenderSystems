@@ -3,7 +3,7 @@ package hu.elte.inf.recommenderSystems.actor
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.spingo.op_rabbit._
 import com.spingo.op_rabbit.properties.{CorrelationId, ReplyTo}
-import hu.elte.inf.recommenderSystems.actor.MessageSender.{SendJsonMessage, SendMessageWithCorrelationId, SendMessageWithCorrelationIdAndReplyToHelloWorld, SendMessageWithCorrelationIdHelloWord}
+import hu.elte.inf.recommenderSystems.actor.MessageSender._
 import org.json4s.DefaultJsonFormats
 import spray.json.{DefaultJsonProtocol, JsValue}
 
@@ -18,6 +18,8 @@ object MessageSender {
   case class SendMessageWithCorrelationId(queueName: String, message: JsValue, correlationId: String) extends SendMessage
 
   case class SendMessageWithCorrelationIdHelloWord(queueName: String, message: String, correlationId: String) extends SendMessage
+
+  case class SendMessageWithCorrelationIdAndReplyTo(queueName: String, message: JsValue, correlationId: String, replyTo: String) extends SendMessage
 
   case class SendMessageWithCorrelationIdAndReplyToHelloWorld(queueName: String, message: String, correlationId: String, replyTo: String) extends SendMessage
 
@@ -48,6 +50,9 @@ class MessageSender(rabbitControl: ActorRef)
 
     case msg: SendMessageWithCorrelationIdHelloWord =>
       rabbitControl ! Message.topic(msg.message, msg.queueName, properties = Seq(CorrelationId(msg.correlationId)))
+
+    case msg: SendMessageWithCorrelationIdAndReplyTo =>
+      rabbitControl ! Message.topic(msg.message, msg.queueName, properties = Seq(CorrelationId(msg.correlationId), ReplyTo(msg.replyTo)))
 
     case msg: SendMessageWithCorrelationIdAndReplyToHelloWorld =>
       rabbitControl ! Message.topic(msg.message, msg.queueName, properties = Seq(CorrelationId(msg.correlationId), ReplyTo(msg.replyTo)))

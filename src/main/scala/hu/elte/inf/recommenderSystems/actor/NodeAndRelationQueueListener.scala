@@ -2,8 +2,8 @@ package hu.elte.inf.recommenderSystems.actor
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.spingo.op_rabbit.Directives._
-import com.spingo.op_rabbit._
 import com.spingo.op_rabbit.SprayJsonSupport._
+import com.spingo.op_rabbit._
 import com.spingo.op_rabbit.properties.{CorrelationId, ReplyTo}
 import hu.elte.inf.recommenderSystems.model.entityrelation.{EntityRelationJsonSupport, EntityRelationMessage}
 

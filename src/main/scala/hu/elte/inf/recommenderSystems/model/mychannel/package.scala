@@ -10,4 +10,8 @@ package object mychannel {
 
   case class GetRecommendationsMethod(method: Method, task: GetRecommendations) extends MyChannelMessage
 
+  case class ReplyObj(itemCount: Int, itemList: List[Item])
+
+  case class Item(id: Long, `type`: String, score: Double, ratingEstimation: Option[Double] = None, title: String, externalId: Long)
+
 }
