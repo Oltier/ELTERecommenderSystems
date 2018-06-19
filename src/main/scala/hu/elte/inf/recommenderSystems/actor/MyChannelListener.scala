@@ -5,6 +5,7 @@ import com.spingo.op_rabbit.Directives._
 import com.spingo.op_rabbit.SprayJsonSupport._
 import com.spingo.op_rabbit._
 import hu.elte.inf.recommenderSystems.config.Config
+import hu.elte.inf.recommenderSystems.model.mychannel.{GetRecommendationsMethod, MyChannelJsonSupport}
 import hu.elte.inf.recommenderSystems.model.registration.{RegistrationJsonSupport, RegistrationMessage}
 import spray.json.JsValue
 
@@ -19,7 +20,7 @@ object MyChannelListener {
 
 }
 
-class MyChannelListener(rabbitControl: ActorRef) extends Actor with ActorLogging with RegistrationJsonSupport with LimitedRedeliveryStrategy {
+class MyChannelListener(rabbitControl: ActorRef) extends Actor with ActorLogging with MyChannelJsonSupport with LimitedRedeliveryStrategy {
   import MyChannelListener.QUEUE
 
   implicit val ec: ExecutionContextExecutor = context.system.dispatcher
@@ -32,9 +33,9 @@ class MyChannelListener(rabbitControl: ActorRef) extends Actor with ActorLogging
         Subscription.run(rabbitControl) {
           channel(qos = 3) {
             consume(Queue.passive(topic(queue(QUEUE), List(s"$QUEUE.#")))) {
-              body(as[JsValue]) {
+              body(as[GetRecommendationsMethod]) {
                 obj =>
-                  log.debug(s"received json \n ${obj.prettyPrint}")
+                  log.debug(s"received json \n $obj")
                   ack
               }
             }

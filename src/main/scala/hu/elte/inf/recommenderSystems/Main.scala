@@ -11,9 +11,10 @@ import hu.elte.inf.recommenderSystems.config.Config
 import hu.elte.inf.recommenderSystems.model.entityrelation.{AddNodeType, AddNodeTypeMethod, EntityRelationJsonSupport}
 import hu.elte.inf.recommenderSystems.model.enum.Method
 import hu.elte.inf.recommenderSystems.model.knowledgebase._
+import hu.elte.inf.recommenderSystems.model.mychannel.{GetRecommendations, GetRecommendationsMethod, MyChannelJsonSupport}
 import hu.elte.inf.recommenderSystems.model.registration.{RegistrationJsonSupport, RegistrationMessage, RegistrationTask}
 
-object Main extends App with RegistrationJsonSupport with EntityRelationJsonSupport with KnowledgeBaseJsonSupport {
+object Main extends App with RegistrationJsonSupport with EntityRelationJsonSupport with KnowledgeBaseJsonSupport with MyChannelJsonSupport {
 
   val system: ActorSystem = ActorSystem("rabbitMq")
 
@@ -27,9 +28,11 @@ object Main extends App with RegistrationJsonSupport with EntityRelationJsonSupp
     val helloWorldMsg = SendMessageWithCorrelationIdAndReplyToHelloWorld(HelloWorldListener.QUEUE, "Zoli", UUID.randomUUID().toString, HelloWorldListener.QUEUE)
     val knowledgeBaseEmitMethod = KnowledgeBaseEmitMethod(Method.EMIT, KnowledgeBaseEmit(Config.QUEUE.myChannel))
     val trueKnowledgeBaseEmitMethod = TrueKnowledgeBaseEmitMethod(Method.EMIT, TrueKnowledgeBaseEmit(channel = Config.QUEUE.myChannel, itemCount = 1000))
+    val myChannelMessage = GetRecommendationsMethod(Method.GET_RECOMMENDATIONS, GetRecommendations(externalId = 123, maxResults = 10))
 
-    supervisor ! SendJsonMessage(Config.QUEUE.trueRatingQueueName, trueKnowledgeBaseEmitMethod.toJson)
+    supervisor ! SendJsonMessage(Config.QUEUE.myChannel, myChannelMessage.toJson)
 
+//    supervisor ! SendJsonMessage(Config.QUEUE.trueRatingQueueName, trueKnowledgeBaseEmitMethod.toJson)
 //    supervisor ! SendJsonMessage(RegistrationQueueListener.QUEUE, registrationMessage.toJson)
 //    supervisor ! SendJsonMessage(Config.QUEUE.knowledgeBaseQueueName, knowledgeBaseEmitMethod.toJson)
 //    supervisor ! SendJsonMessage(NodeAndRelationQueueListener.QUEUE, addNodeTypeMessage.toJson)
