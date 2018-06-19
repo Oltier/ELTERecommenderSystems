@@ -19,6 +19,7 @@ class Supervisor extends Actor with ActorLogging {
   val nodeAndRelationQueueListener: ActorRef = context.actorOf(NodeAndRelationQueueListener.props(rabbitControl), NodeAndRelationQueueListener.name)
   val messageSender: ActorRef = context.actorOf(MessageSender.props(rabbitControl), MessageSender.name)
   val helloWorldListener: ActorRef = context.actorOf(HelloWorldListener.props(rabbitControl, messageSender), HelloWorldListener.name)
+  val myChannelListener: ActorRef = context.actorOf(MyChannelListener.props(rabbitControl))
 
   override val supervisorStrategy: OneForOneStrategy = OneForOneStrategy(loggingEnabled = true) {
     case ex: Exception =>
@@ -32,6 +33,7 @@ class Supervisor extends Actor with ActorLogging {
       registrationQueueListener ! Listen
       nodeAndRelationQueueListener ! Listen
       helloWorldListener ! Listen
+      myChannelListener ! Listen
 
     case msg: SendMessage => messageSender forward msg
 
@@ -39,5 +41,6 @@ class Supervisor extends Actor with ActorLogging {
       registrationQueueListener ! CloseYourEars
       nodeAndRelationQueueListener ! CloseYourEars
       helloWorldListener ! CloseYourEars
+      myChannelListener ! CloseYourEars
   }
 }

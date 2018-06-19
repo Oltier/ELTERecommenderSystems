@@ -27,7 +27,7 @@ object Main extends App with RegistrationJsonSupport with EntityRelationJsonSupp
     val helloWorldMsg = SendMessageWithCorrelationIdAndReplyToHelloWorld(HelloWorldListener.QUEUE, "Zoli", UUID.randomUUID().toString, HelloWorldListener.QUEUE)
     val knowledgeBaseEmitMethod = KnowledgeBaseEmitMethod(Method.EMIT, KnowledgeBaseEmit(Config.QUEUE.myChannel))
 
-    supervisor ! SendJsonMessage("KnowledgeBaseService#ml_1m", knowledgeBaseEmitMethod.toJson)
+    supervisor ! SendJsonMessage(Config.QUEUE.myChannel, knowledgeBaseEmitMethod.toJson)
 
 //    supervisor ! SendJsonMessage(RegistrationQueueListener.QUEUE, registrationMessage.toJson)
 //    supervisor ! SendJsonMessage(NodeAndRelationQueueListener.QUEUE, addNodeTypeMessage.toJson)
