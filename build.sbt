@@ -2,10 +2,11 @@ name := "RecommenderSystems"
 
 version := "0.1"
 
-scalaVersion := "2.12.4"
+scalaVersion := "2.11.7"
 
 val opRabbitVersion = "2.1.0"
 val akkaVersion = "2.5.11"
+val sparkVersion = "2.3.1"
 
 val akkaDependencies = Seq(
   "com.typesafe.akka" %% "akka-actor" % akkaVersion,
@@ -30,11 +31,17 @@ val otherDependencies = Seq(
   "org.json4s" %% "json4s-native" % "3.5.3",
   "io.spray" %%  "spray-json" % "1.3.3",
   "com.typesafe.akka" %% "akka-http-spray-json" % "10.1.3",
-  "org.scalatest" % "scalatest_2.12" % "3.0.4",
+  "org.scalatest" %% "scalatest" % "3.0.4",
   "joda-time" % "joda-time" % "2.9.9"
+)
+
+val sparkDependencies = Seq(
+  "org.apache.spark" %% "spark-core" % sparkVersion,
+  "org.apache.spark" %% "spark-mllib" % sparkVersion
 )
 
 libraryDependencies ++=
   mqDependencies ++
     configDependencies ++
-    otherDependencies
+    otherDependencies ++
+    sparkDependencies
