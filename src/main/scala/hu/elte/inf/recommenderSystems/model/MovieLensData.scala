@@ -32,6 +32,17 @@ class MovieLensData(directoryPath: String) {
       }
   }
 
+  def loadOwnRatings(): RDD[(Long, Rating)] = {
+    SparkConfig.sc
+      .textFile(s"$directoryPath/ownRatings.template.csv")
+      .filter(!_.contains("movieId"))
+      .map { line =>
+        val fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1)
+        (fields(3).toLong % 10,
+          Rating(fields(0).toInt, fields(1).toInt, fields(2).toDouble))
+      }
+  }
+
   def isValid(movies: Map[Int, String], ratings: RDD[(Long, Rating)]): Boolean =
     ratings
       .filter(

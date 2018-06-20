@@ -14,7 +14,7 @@ object ModelTrainer {
 
   case class TuneParameters(movieLensData: MovieLensData)
 
-  def props(sc: SparkContext): Props = Props(new ModelTrainer(sc, rank, iterations, lambda))
+  def props(sc: SparkContext): Props = Props(new ModelTrainer(sc))
 }
 
 class ModelTrainer(sc: SparkContext) extends Actor with ActorLogging {
@@ -34,11 +34,11 @@ class ModelTrainer(sc: SparkContext) extends Actor with ActorLogging {
 
   override def receive: Receive = {
     case RunTraining(movieLensData) =>
-      this.data = Some(movieLensData.loadRatings().values)
+      this.data = Some(movieLensData.loadRatings().values.union(movieLensData.loadOwnRatings().values).cache())
       trainModel(movieLensData)
 
     case TuneParameters(movieLensData) =>
-      this.data = Some(movieLensData.loadRatings().values)
+      this.data = Some(movieLensData.loadRatings().values.union(movieLensData.loadOwnRatings().values).cache())
       findBestConfig()
 
   }
