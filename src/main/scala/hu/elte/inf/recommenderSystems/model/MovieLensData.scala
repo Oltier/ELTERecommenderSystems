@@ -14,8 +14,8 @@ class MovieLensData(directoryPath: String) {
       .textFile(s"$directoryPath/movies.csv")
       .filter(!_.contains("movieId"))
       .map { line =>
-        val fields = line.split(',')
-        (fields(0).toInt, s"${fields(2)} (${fields(1)})")
+        val fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1)
+        (fields(0).toInt, s"${fields(1)} (${fields(2)})")
       }
       .collect
       .toMap
@@ -26,7 +26,7 @@ class MovieLensData(directoryPath: String) {
       .textFile(s"$directoryPath/ratings.csv")
       .filter(!_.contains("movieId"))
       .map { line =>
-        val fields = line.split(',')
+        val fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1)
         (fields(3).toLong % 10,
          Rating(fields(0).toInt, fields(1).toInt, fields(2).toDouble))
       }

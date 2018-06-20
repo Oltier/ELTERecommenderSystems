@@ -129,7 +129,7 @@ object Main
             }
 
           } else {
-            println(s"Unknown commend: $other. Type 'exit' to quit.")
+            println(s"Unknown command: $other. Type 'exit' to quit.")
           }
       }
     } while (cmd != "exit")
