@@ -12,7 +12,7 @@ object ModelTrainer {
 
   case class RunTraining(movieLensData: MovieLensData)
 
-  case class ComputeRmse(model: MatrixFactorizationModel, data: RDD[Rating], n: Long)
+  case class TuneParameters(movieLensData: MovieLensData)
 
   def props(sc: SparkContext, rank: Int, iterations: Int, lambda: Double): Props = Props(new ModelTrainer(sc, rank, iterations, lambda))
 }
@@ -21,50 +21,85 @@ class ModelTrainer(sc: SparkContext, rank: Int, iterations: Int, lambda: Double)
 
   import ModelTrainer._
 
+  val ranks: List[Int] = (6 to 10).toList //Hidden parameters, such as sex, age, income.
+  val lambdas: List[Double] = (0.1 to 0.5 by 0.1).toList
+  val numIters: List[Int] = (5 to 25 by 5).toList
+  var bestModel: Option[MatrixFactorizationModel] = None
+  var bestValidationRmse: Double = Double.MaxValue
+  var bestRank: Int = 9
+  var bestLambda: Double = 0.1
+  var bestNumIter: Int = 15
+  var data: Option[RDD[Rating]] = None
+
+
   override def receive: Receive = {
     case RunTraining(movieLensData) =>
+      this.data = Some(movieLensData.loadRatings().values)
       trainModel(movieLensData)
 
-    case cr: ComputeRmse =>
-      computeRmse(cr)
+    case TuneParameters(movieLensData) =>
+      findBestConfig()
+
   }
 
-  private def trainModel(data: MovieLensData): Unit = {
-    val model: MatrixFactorizationModel = ALS.train(data.loadRatings().values, rank, iterations, lambda)
-    sender ! UpdateModel(model, data)
+  private def trainModel(movieLensData: MovieLensData): Unit = {
+    bestModel = Some(ALS.train(data.get, bestRank, bestNumIter, bestLambda))
+    sender ! UpdateModel(bestModel.get, movieLensData)
     context.stop(self)
   }
 
-  private def computeRmse(cr: ComputeRmse) = {
-    val predictions: RDD[Rating] = cr.model.predict(cr.data.map(rating => (rating.user, rating.product)))
-    val predictionsAndRatings = predictions.map(rating => ((rating.user, rating.product), rating.rating))
-      .join(cr.data.map(rating => ((rating.user, rating.product), rating.rating)))
-      .values
-    math.sqrt(predictionsAndRatings.map(x => (x._1 - x._2) * (x._1 - x._2)).reduce(_ + _) / cr.n)
+  private def findBestConfig(): Unit = {
+    for {
+      rank <- ranks
+      lambda <- lambdas
+      numIter <- numIters
+    } {
+      val validationRmse = computeRmse(data = data.get, rank = rank, iter = numIter, lambda = lambda)
+
+      log.info(s"RMSE = $validationRmse for the model trained with rank = $rank, lambda = $lambda and iter = $numIter.")
+
+      if(validationRmse < bestValidationRmse) {
+        bestValidationRmse = validationRmse
+        bestRank = rank
+        bestLambda = lambda
+        bestNumIter = numIter
+      }
+    }
+
+    log.info(s"Best config: RMSE = $bestValidationRmse for the model trained with rank = $bestRank, lambda = $bestLambda and iter = $bestNumIter.")
   }
 
-  private def evalALS(cr: ComputeRmse, nFolds: Int = 10, seed: Int = 77,
-                      rank: Int = 10, iter: Int = 20, alpha: Double = 0.01): (Double, Array[Double], Array[MatrixFactorizationModel]) = {
-    val data = cr.data
+  private def computeRmse(data: RDD[Rating], nFolds: Int = 10, seed: Int = 77,
+                          rank: Int = 10, iter: Int = 20, lambda: Double = 0.01): Double = {
+
     val folds: Array[(RDD[Rating], RDD[Rating])] = kFold(data, nFolds, seed)
-    val models: Array[(MatrixFactorizationModel, RDD[Rating])] = folds.map {
-      case (train, test) => (ALS.train(train, rank, iter, alpha), test)
-    }
-    // evaluate model predictions on test data: RDD[((user, product), rating)]
-    val pred = models.map {
-      case (model, test) =>
-        model.predict(test.map {
-          case Rating(usr, prod, _) =>
-            (usr, prod)
-        }).map {
-          case Rating(usr, prod, rate) => ((usr, prod), rate)
-        }
-    }
-    // reformat truth: RDD[((user, product), rating)]
-    val truth = models.map { case (_, test) => test.map { case Rating(usr, prod, rate) => ((usr, prod), rate) } }
-    // an array of RMSE for each test fold:
-    val rmse = truth.zip(pred).map { case (tr, pd) => tr.join(pd).map { case ((_, _), (t, p)) => math.pow(p - t, 2) }.mean() }.map(math.sqrt)
-    // returns tuple: (total RMSE, RMSE per fold, model per fold)
-    (rmse.fold(0.0)(_ + _) / rmse.length, rmse, models.map(_._1))
+    val models: Array[(MatrixFactorizationModel, RDD[Rating])] = folds.map(trainAndTest => (ALS.train(trainAndTest._1, rank, iter, lambda), trainAndTest._2))
+    val predictions: Array[RDD[((Int, Int), Double)]] = models
+      .map(modelAndTest =>
+        modelAndTest._1
+          .predict(modelAndTest._2.map(rating => (rating.user, rating.product)))
+          .map(rating => ((rating.user, rating.product), rating.rating))
+      )
+
+    val trueRating: Array[RDD[((Int, Int), Double)]] = models
+      .map(matrixFactModelAndRDD =>
+        matrixFactModelAndRDD._2
+          .map(rating => ((rating.user, rating.product), rating.rating))
+      )
+
+    val rmse = trueRating
+      .zip(predictions)
+      .map(trueRatingAndPred => {
+        val trueRating = trueRatingAndPred._1
+        val pred = trueRatingAndPred._2
+        trueRating
+          .join(pred)
+          .map {
+            case ((_, _), (t, p)) =>
+              math.pow(p - t, 2)
+          }.mean()
+      }).map(math.sqrt)
+
+    rmse.fold(0.0)(_ + _) / rmse.length
   }
 }

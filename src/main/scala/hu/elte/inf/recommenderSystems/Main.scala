@@ -7,6 +7,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import hu.elte.inf.recommenderSystems.actor.MessageSender.{SendJsonMessage, SendMessageWithCorrelationIdAndReplyTo, SendMessageWithCorrelationIdAndReplyToHelloWorld}
 import hu.elte.inf.recommenderSystems.actor.Supervisor.{Begin, End}
+import hu.elte.inf.recommenderSystems.actor.recommender.ModelTrainer.TuneParameters
 import hu.elte.inf.recommenderSystems.actor.recommender.RecommenderSystem
 import hu.elte.inf.recommenderSystems.actor.recommender.RecommenderSystem.{GenerateRecommendations, Train}
 import hu.elte.inf.recommenderSystems.actor.{HelloWorldListener, NodeAndRelationQueueListener, RegistrationQueueListener, Supervisor}
@@ -110,11 +111,14 @@ object Main
 
     do {
       cmd = scala.io.StdIn.readLine(
-        "Available commands: train, getRecommendation [uid: Int] [count: Int]\n")
+        "Available commands: train, tuneParameters, getRecommendation [uid: Int] [count: Int]\n")
 
       cmd match {
         case "train" =>
           recommenderSystem ! Train(movieLensData)
+
+        case "tuneParameters" =>
+          recommenderSystem ! TuneParameters(movieLensData)
 
         case other =>
           if (other.startsWith("getRecommendation")) {
