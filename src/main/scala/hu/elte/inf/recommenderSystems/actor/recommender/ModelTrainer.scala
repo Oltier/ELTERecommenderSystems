@@ -26,9 +26,9 @@ class ModelTrainer(sc: SparkContext, rank: Int, iterations: Int, lambda: Double)
   val numIters: List[Int] = (5 to 25 by 5).toList
   var bestModel: Option[MatrixFactorizationModel] = None
   var bestValidationRmse: Double = Double.MaxValue
-  var bestRank: Int = 9
-  var bestLambda: Double = 0.1
-  var bestNumIter: Int = 15
+  var bestRank: Int = 10
+  var bestLambda: Double = 0.2
+  var bestNumIter: Int = 20
   var data: Option[RDD[Rating]] = None
 
 
@@ -38,6 +38,7 @@ class ModelTrainer(sc: SparkContext, rank: Int, iterations: Int, lambda: Double)
       trainModel(movieLensData)
 
     case TuneParameters(movieLensData) =>
+      this.data = Some(movieLensData.loadRatings().values)
       findBestConfig()
 
   }
@@ -45,7 +46,7 @@ class ModelTrainer(sc: SparkContext, rank: Int, iterations: Int, lambda: Double)
   private def trainModel(movieLensData: MovieLensData): Unit = {
     bestModel = Some(ALS.train(data.get, bestRank, bestNumIter, bestLambda))
     sender ! UpdateModel(bestModel.get, movieLensData)
-    context.stop(self)
+    log.info(s"Model trained with rank = $bestRank, lambda = $bestLambda and iter = $bestNumIter.")
   }
 
   private def findBestConfig(): Unit = {

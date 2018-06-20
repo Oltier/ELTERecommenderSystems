@@ -1,7 +1,7 @@
 package hu.elte.inf.recommenderSystems.actor.recommender
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import hu.elte.inf.recommenderSystems.actor.recommender.ModelTrainer.RunTraining
+import hu.elte.inf.recommenderSystems.actor.recommender.ModelTrainer.{RunTraining, TuneParameters}
 import hu.elte.inf.recommenderSystems.model.MovieLensData
 import org.apache.spark.SparkContext
 import org.apache.spark.mllib.recommendation.MatrixFactorizationModel
@@ -30,6 +30,9 @@ class RecommenderSystem(sc: SparkContext) extends Actor with ActorLogging {
   override def receive: Receive = {
     case Train(movieLensData) =>
       modelTrainer ! RunTraining(movieLensData)
+
+    case msg: TuneParameters =>
+      modelTrainer forward msg
 
     case GenerateRecommendations(userId, count) =>
       generateRecommendations(userId, count)
