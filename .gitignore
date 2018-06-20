@@ -1,2 +1,4 @@
 target
 .idea
+/src/main/resources/ml-latest/
+/src/main/resources/ml-latest-small/
