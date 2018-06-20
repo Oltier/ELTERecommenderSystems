@@ -23,7 +23,7 @@ class RecommenderSystem(sc: SparkContext) extends Actor with ActorLogging {
 
   import RecommenderSystem._
 
-  val modelTrainer: ActorRef = context.actorOf(ModelTrainer.props(sc, 10, 10, 0.01))
+  val modelTrainer: ActorRef = context.actorOf(ModelTrainer.props(sc))
   var model: Option[MatrixFactorizationModel] = None
   var trainingData: Option[Map[Int, String]] = None
 

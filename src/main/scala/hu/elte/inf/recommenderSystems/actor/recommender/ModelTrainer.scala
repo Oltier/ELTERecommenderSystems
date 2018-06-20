@@ -14,10 +14,10 @@ object ModelTrainer {
 
   case class TuneParameters(movieLensData: MovieLensData)
 
-  def props(sc: SparkContext, rank: Int, iterations: Int, lambda: Double): Props = Props(new ModelTrainer(sc, rank, iterations, lambda))
+  def props(sc: SparkContext): Props = Props(new ModelTrainer(sc, rank, iterations, lambda))
 }
 
-class ModelTrainer(sc: SparkContext, rank: Int, iterations: Int, lambda: Double) extends Actor with ActorLogging {
+class ModelTrainer(sc: SparkContext) extends Actor with ActorLogging {
 
   import ModelTrainer._
 
