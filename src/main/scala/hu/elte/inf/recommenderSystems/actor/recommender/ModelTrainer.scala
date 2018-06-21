@@ -44,6 +44,9 @@ class ModelTrainer(sc: SparkContext) extends Actor with ActorLogging {
   }
 
   private def trainModel(movieLensData: MovieLensData): Unit = {
+    //TODO Training without specifying lambda should be possible, because in that case the function uses
+    //alternating-least-squares with weighted-λ -regularization (https://link.springer.com/chapter/10.1007%2F978-3-540-68880-8_32)
+    //however, that the computer doesn't have enough memory for that and it results in StackOverflowException
     bestModel = Some(ALS.train(data.get, bestRank, bestNumIter, bestLambda))
     sender ! UpdateModel(bestModel.get, movieLensData)
     log.info(s"Model trained with rank = $bestRank, lambda = $bestLambda and iter = $bestNumIter.")
@@ -74,7 +77,8 @@ class ModelTrainer(sc: SparkContext) extends Actor with ActorLogging {
                           rank: Int = 10, iter: Int = 20, lambda: Double = 0.01): Double = {
 
     val folds: Array[(RDD[Rating], RDD[Rating])] = kFold(data, nFolds, seed)
-    val models: Array[(MatrixFactorizationModel, RDD[Rating])] = folds.map(trainAndTest => (ALS.train(trainAndTest._1, rank, iter, lambda), trainAndTest._2))
+    val models: Array[(MatrixFactorizationModel, RDD[Rating])] = folds.map((trainAndTest: (RDD[Rating], RDD[Rating])) =>
+      (ALS.train(trainAndTest._1, rank, iter, lambda), trainAndTest._2))
     val predictions: Array[RDD[((Int, Int), Double)]] = models
       .map(modelAndTest =>
         modelAndTest._1

@@ -10,7 +10,7 @@ object SparkConfig {
   val config: SparkConf = new SparkConf()
     .setMaster(Config.SPARK.master)
     .setAppName(Config.SPARK.appName)
-    .set("spark.executor.memory", "2g")
+//    .set("spark.executor.memory", "2g")
 
   val sc = new SparkContext(config)
 }

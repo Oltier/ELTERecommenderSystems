@@ -24,8 +24,8 @@ class RecommenderSystem(sc: SparkContext) extends Actor with ActorLogging {
   import RecommenderSystem._
 
   val modelTrainer: ActorRef = context.actorOf(ModelTrainer.props(sc))
-  var model: Option[MatrixFactorizationModel] = None
-  var trainingData: Option[Map[Int, String]] = None
+  private var model: Option[MatrixFactorizationModel] = None //TODO Use context.become instead for thread safety
+  private var trainingData: Option[Map[Int, String]] = None
 
   override def receive: Receive = {
     case Train(movieLensData) =>
